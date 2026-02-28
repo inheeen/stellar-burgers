@@ -1,4 +1,4 @@
-import { OrderInfo } from '../../components/order-info';
+import { OrderInfo } from '../../components';
 
 export default function OrderPage() {
   return <OrderInfo />;

@@ -2,60 +2,58 @@ import '../../index.css';
 import styles from './app.module.css';
 
 import { useEffect } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-
-import { useDispatch, useSelector } from '../../services/store';
-import { fetchIngredients } from '../../services/slices/ingredients-slice';
-import { getUserThunk } from '../../services/slices/auth-slice';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 
 import {
   AppHeader,
-  Modal,
-  ProtectedRoute,
   IngredientDetails,
-  OrderInfo
+  Modal,
+  OrderInfo,
+  ProtectedRoute
 } from '@components';
-
 import {
   ConstructorPage,
   Feed,
-  Login,
-  Register,
   ForgotPassword,
-  ResetPassword,
+  IngredientPage,
+  Login,
+  NotFound404,
+  OrderPage,
   Profile,
   ProfileOrders,
-  NotFound404
+  Register,
+  ResetPassword
 } from '@pages';
 
-import IngredientPage from '../../pages/ingredient/ingredient';
-import OrderPage from '../../pages/order/order';
+import { useDispatch, useSelector } from '../../services/store';
+import { fetchIngredients } from '../../services/slices/ingredients-slice';
 
 const App = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const state = location.state as { background?: Location } | null;
+  const background = state?.background;
 
   useEffect(() => {
     dispatch(fetchIngredients());
-    dispatch(getUserThunk());
   }, [dispatch]);
 
   const isIngredientsLoading = useSelector((s) => s.ingredients.isLoading);
   const ingredients = useSelector((s) => s.ingredients.items);
   const error = useSelector((s) => s.ingredients.error);
 
-  const location = useLocation();
-  const navigate = useNavigate();
   const handleCloseModal = () => navigate(-1);
-
-  const state = location.state as { background?: Location };
-  const background = state?.background;
 
   return (
     <div className={styles.app}>
       <AppHeader />
 
       {isIngredientsLoading ? (
-        <div className='pt-10'>Загрузка...</div>
+        <div className='text text_type_main-medium pt-4'>
+          Загрузка ингредиентов...
+        </div>
       ) : error ? (
         <div className={`${styles.error} text text_type_main-medium pt-4`}>
           {error}
@@ -66,7 +64,7 @@ const App = () => {
         </div>
       ) : (
         <>
-          {/* Подложка */}
+          {}
           <Routes location={background || location}>
             <Route path='/' element={<ConstructorPage />} />
 
@@ -136,7 +134,7 @@ const App = () => {
             <Route path='*' element={<NotFound404 />} />
           </Routes>
 
-          {/* Модалки */}
+          {}
           {background && (
             <Routes>
               <Route

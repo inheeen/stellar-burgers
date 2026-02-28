@@ -1,7 +1,13 @@
 import { setCookie, getCookie } from './cookie';
 import { TIngredient, TOrder, TOrdersData, TUser } from './types';
 
-const URL = process.env.BURGER_API_URL;
+const URL = process.env.REACT_APP_BURGER_API_URL;
+
+if (!URL) {
+  throw new Error(
+    'REACT_APP_BURGER_API_URL is not defined. Check your .env file'
+  );
+}
 
 const checkResponse = <T>(res: Response): Promise<T> =>
   res.ok ? res.json() : res.json().then((err) => Promise.reject(err));
@@ -27,11 +33,11 @@ export const refreshToken = (): Promise<TRefreshResponse> =>
   })
     .then((res) => checkResponse<TRefreshResponse>(res))
     .then((refreshData) => {
-      if (!refreshData.success) {
-        return Promise.reject(refreshData);
-      }
+      if (!refreshData.success) return Promise.reject(refreshData);
+
       localStorage.setItem('refreshToken', refreshData.refreshToken);
       setCookie('accessToken', refreshData.accessToken);
+
       return refreshData;
     });
 
@@ -45,15 +51,17 @@ export const fetchWithRefresh = async <T>(
   } catch (err) {
     if ((err as { message: string }).message === 'jwt expired') {
       const refreshData = await refreshToken();
+
       if (options.headers) {
-        (options.headers as { [key: string]: string }).authorization =
+        (options.headers as Record<string, string>).authorization =
           refreshData.accessToken;
       }
+
       const res = await fetch(url, options);
       return await checkResponse<T>(res);
-    } else {
-      return Promise.reject(err);
     }
+
+    return Promise.reject(err);
   }
 };
 
@@ -132,9 +140,9 @@ export const orderBurgerApi = (data: string[]) =>
     body: JSON.stringify({
       ingredients: data
     })
-  }).then((data) => {
-    if (data?.success) return data;
-    return Promise.reject(data);
+  }).then((resp) => {
+    if (resp?.success) return resp;
+    return Promise.reject(resp);
   });
 
 type TOrderResponse = TServerResponse<{
@@ -170,9 +178,9 @@ export const registerUserApi = (data: TRegisterData) =>
     body: JSON.stringify(data)
   })
     .then((res) => checkResponse<TAuthResponse>(res))
-    .then((data) => {
-      if (data?.success) return data;
-      return Promise.reject(data);
+    .then((resp) => {
+      if (resp?.success) return resp;
+      return Promise.reject(resp);
     });
 
 export type TLoginData = {
@@ -189,9 +197,9 @@ export const loginUserApi = (data: TLoginData) =>
     body: JSON.stringify(data)
   })
     .then((res) => checkResponse<TAuthResponse>(res))
-    .then((data) => {
-      if (data?.success) return data;
-      return Promise.reject(data);
+    .then((resp) => {
+      if (resp?.success) return resp;
+      return Promise.reject(resp);
     });
 
 export const forgotPasswordApi = (data: { email: string }) =>
@@ -203,9 +211,9 @@ export const forgotPasswordApi = (data: { email: string }) =>
     body: JSON.stringify(data)
   })
     .then((res) => checkResponse<TServerResponse<{}>>(res))
-    .then((data) => {
-      if (data?.success) return data;
-      return Promise.reject(data);
+    .then((resp) => {
+      if (resp?.success) return resp;
+      return Promise.reject(resp);
     });
 
 export const resetPasswordApi = (data: { password: string; token: string }) =>
@@ -217,9 +225,9 @@ export const resetPasswordApi = (data: { password: string; token: string }) =>
     body: JSON.stringify(data)
   })
     .then((res) => checkResponse<TServerResponse<{}>>(res))
-    .then((data) => {
-      if (data?.success) return data;
-      return Promise.reject(data);
+    .then((resp) => {
+      if (resp?.success) return resp;
+      return Promise.reject(resp);
     });
 
 type TUserResponse = TServerResponse<{ user: TUser }>;

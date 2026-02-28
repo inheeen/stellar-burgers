@@ -10,9 +10,13 @@ const ProtectedRoute = ({ children, onlyUnAuth = false }: Props) => {
   const location = useLocation();
   const isAuth = useSelector((s) => s.auth.isAuth);
 
-  if (onlyUnAuth && isAuth) return <Navigate to='/' replace />;
-  if (!onlyUnAuth && !isAuth)
+  if (onlyUnAuth && isAuth) {
+    return <Navigate to='/' replace />;
+  }
+
+  if (!onlyUnAuth && !isAuth) {
     return <Navigate to='/login' state={{ from: location }} replace />;
+  }
 
   return children;
 };

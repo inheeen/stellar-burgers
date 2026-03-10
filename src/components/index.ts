@@ -12,5 +12,4 @@ export * from './order-info';
 export * from './order-status';
 export * from './orders-list';
 export * from './profile-menu';
-
 export { ProtectedRoute } from './protected-route/index';

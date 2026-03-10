@@ -1,16 +1,31 @@
 import { setCookie, getCookie } from './cookie';
 import { TIngredient, TOrder, TOrdersData, TUser } from './types';
 
-const URL = process.env.REACT_APP_BURGER_API_URL;
+const URL = process.env.BURGER_API_URL;
 
-if (!URL) {
-  throw new Error(
-    'REACT_APP_BURGER_API_URL is not defined. Check your .env file'
-  );
-}
+const checkResponse = async <T>(res: Response): Promise<T> => {
+  const contentType = res.headers.get('content-type');
 
-const checkResponse = <T>(res: Response): Promise<T> =>
-  res.ok ? res.json() : res.json().then((err) => Promise.reject(err));
+  if (contentType && contentType.includes('application/json')) {
+    const data = await res.json();
+
+    if (res.ok) {
+      return data;
+    }
+
+    return Promise.reject(data);
+  }
+
+  const text = await res.text();
+
+  if (res.ok) {
+    return text as T;
+  }
+
+  return Promise.reject({
+    message: text || `Ошибка ${res.status}`
+  });
+};
 
 type TServerResponse<T> = {
   success: boolean;
@@ -231,6 +246,7 @@ export const resetPasswordApi = (data: { password: string; token: string }) =>
     });
 
 type TUserResponse = TServerResponse<{ user: TUser }>;
+
 
 export const getUserApi = () =>
   fetchWithRefresh<TUserResponse>(`${URL}/auth/user`, {

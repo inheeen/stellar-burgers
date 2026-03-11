@@ -38,8 +38,7 @@ const profileOrdersSlice = createSlice({
       })
       .addCase(fetchProfileOrders.rejected, (state, action) => {
         state.isLoading = false;
-        state.error =
-          action.error.message || 'Ошибка загрузки истории заказов';
+        state.error = action.error.message || 'Ошибка загрузки истории заказов';
       });
   }
 });

@@ -15,24 +15,24 @@ export const Register: FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-const handleSubmit = (e: SyntheticEvent) => {
-  e.preventDefault();
+  const handleSubmit = (e: SyntheticEvent) => {
+    e.preventDefault();
 
-  dispatch(
-    registerUser({
-      name: userName,
-      email,
-      password
-    })
-  )
-    .unwrap()
-    .then(() => {
-      navigate('/', { replace: true });
-    })
-    .catch((err) => {
-      console.error('Ошибка регистрации:', err);
-    });
-};
+    dispatch(
+      registerUser({
+        name: userName,
+        email,
+        password
+      })
+    )
+      .unwrap()
+      .then(() => {
+        navigate('/', { replace: true });
+      })
+      .catch((err) => {
+        console.error('Ошибка регистрации:', err);
+      });
+  };
   return (
     <RegisterUI
       errorText={errorText || ''}

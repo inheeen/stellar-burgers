@@ -1,42 +1,88 @@
-import { ConstructorPage } from '@pages';
+import { useEffect } from 'react';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import type { Location } from 'react-router-dom';
+import {
+  ConstructorPage,
+  Feed,
+  Login,
+  Register,
+  ForgotPassword,
+  ResetPassword,
+  Profile,
+  ProfileOrders,
+  NotFound404
+} from '@pages';
 import '../../index.css';
 import styles from './app.module.css';
 
-import { AppHeader } from '@components';
+import {
+  AppHeader,
+  IngredientDetails,
+  OrderInfo,
+  ProtectedRoute,
+  Modal
+} from '@components';
 import { Preloader } from '@ui';
+import { useDispatch, useSelector } from '../../services/store';
+import {
+  selectIngredients,
+  selectIngredientsLoading,
+  selectIngredientsError
+} from '../../services/selectors';
+import { fetchIngredients } from '../../services/slices/ingredients-slice';
+import { fetchUser, setAuthChecked } from '../../services/slices/user-slice';
+import { getCookie } from '../../utils/cookie';
 
 const App = () => {
-  /** TODO: взять переменные из стора */
-  const isIngredientsLoading = false;
-  const ingredients = [];
-  const error = null;
+  const dispatch = useDispatch();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const ingredients = useSelector(selectIngredients);
+  const isIngredientsLoading = useSelector(selectIngredientsLoading);
+  const error = useSelector(selectIngredientsError);
+
+  const background = (location.state as { background?: Location } | null)
+    ?.background;
+
+  useEffect(() => {
+    dispatch(fetchIngredients());
+  }, [dispatch]);
+
+  useEffect(() => {
+    const token = getCookie('accessToken');
+
+    if (token) {
+      dispatch(fetchUser())
+        .unwrap()
+        .catch(() => {})
+        .finally(() => {
+          dispatch(setAuthChecked(true));
+        });
+    } else {
+      dispatch(setAuthChecked(true));
+    }
+  }, [dispatch]);
+
+  const closeModal = () => {
+    navigate(-1);
+  };
 
   return (
     <div className={styles.app}>
       <AppHeader />
 
       {isIngredientsLoading ? (
-        <div className='text text_type_main-medium pt-4'>
-          Загрузка ингредиентов...
-        </div>
+        <Preloader />
       ) : error ? (
         <div className={`${styles.error} text text_type_main-medium pt-4`}>
           {error}
         </div>
       ) : ingredients.length > 0 ? (
-        <ConstructorPage />
-      ) : (
-        <div className={`${styles.title} text text_type_main-medium pt-4`}>
-          Нет ингредиентов
-        </div>
-      ) : (
         <>
-          {}
           <Routes location={background || location}>
             <Route path='/' element={<ConstructorPage />} />
-
             <Route path='/feed' element={<Feed />} />
-            <Route path='/feed/:number' element={<OrderPage />} />
 
             <Route
               path='/login'
@@ -46,6 +92,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path='/register'
               element={
@@ -54,6 +101,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path='/forgot-password'
               element={
@@ -62,6 +110,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path='/reset-password'
               element={
@@ -79,6 +128,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path='/profile/orders'
               element={
@@ -87,44 +137,47 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
+            <Route path='/ingredients/:id' element={<IngredientDetails />} />
+            <Route path='/feed/:number' element={<OrderInfo />} />
+
             <Route
               path='/profile/orders/:number'
               element={
                 <ProtectedRoute>
-                  <OrderPage />
+                  <OrderInfo />
                 </ProtectedRoute>
               }
             />
 
-            <Route path='/ingredients/:id' element={<IngredientPage />} />
-
             <Route path='*' element={<NotFound404 />} />
           </Routes>
 
-          {}
           {background && (
             <Routes>
               <Route
-                path='/feed/:number'
-                element={
-                  <Modal title='Детали заказа' onClose={handleCloseModal}>
-                    <OrderInfo />
-                  </Modal>
-                }
-              />
-              <Route
                 path='/ingredients/:id'
                 element={
-                  <Modal title='Детали ингредиента' onClose={handleCloseModal}>
+                  <Modal title='Детали ингредиента' onClose={closeModal}>
                     <IngredientDetails />
                   </Modal>
                 }
               />
+
+              <Route
+                path='/feed/:number'
+                element={
+                  <Modal title='Детали заказа' onClose={closeModal}>
+                    <OrderInfo />
+                  </Modal>
+                }
+              />
+
               <Route
                 path='/profile/orders/:number'
                 element={
                   <ProtectedRoute>
-                    <Modal title='Детали заказа' onClose={handleCloseModal}>
+                    <Modal title='Детали заказа' onClose={closeModal}>
                       <OrderInfo />
                     </Modal>
                   </ProtectedRoute>
@@ -133,6 +186,10 @@ const App = () => {
             </Routes>
           )}
         </>
+      ) : (
+        <div className={`${styles.title} text text_type_main-medium pt-4`}>
+          Нет ингредиентов
+        </div>
       )}
     </div>
   );

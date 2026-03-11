@@ -15,21 +15,21 @@ export const Login: FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const from = (location.state as { from?: { pathname: string } })?.from
-    ?.pathname || '/';
+  const from =
+    (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
 
-const handleSubmit = (e: SyntheticEvent) => {
-  e.preventDefault();
+  const handleSubmit = (e: SyntheticEvent) => {
+    e.preventDefault();
 
-  dispatch(loginUser({ email, password }))
-    .unwrap()
-    .then(() => {
-      navigate(from, { replace: true });
-    })
-    .catch((err) => {
-      console.error('Ошибка входа:', err);
-    });
-};
+    dispatch(loginUser({ email, password }))
+      .unwrap()
+      .then(() => {
+        navigate(from, { replace: true });
+      })
+      .catch((err) => {
+        console.error('Ошибка входа:', err);
+      });
+  };
   return (
     <LoginUI
       errorText={errorText || ''}

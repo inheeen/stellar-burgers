@@ -1,30 +1,34 @@
 import { setCookie, getCookie } from './cookie';
-import { TIngredient, TOrder, TOrdersData, TUser } from './types';
+import { TIngredient, TOrder, TUser } from './types';
 
-const URL = process.env.BURGER_API_URL;
+const URL = process.env.BURGER_API_URL || process.env.REACT_APP_BURGER_API_URL;
+
+if (!URL) {
+  throw new Error(
+    'API URL is not defined. Set BURGER_API_URL or REACT_APP_BURGER_API_URL in .env'
+  );
+}
 
 const checkResponse = async <T>(res: Response): Promise<T> => {
-  const contentType = res.headers.get('content-type');
+  const contentType = res.headers.get('content-type') || '';
 
-  if (contentType && contentType.includes('application/json')) {
-    const data = await res.json();
+  if (!contentType.includes('application/json')) {
+    const text = await res.text();
 
-    if (res.ok) {
-      return data;
-    }
-
-    return Promise.reject(data);
+    return Promise.reject({
+      message: res.ok
+        ? 'Сервер вернул не JSON. Проверьте адрес API в .env'
+        : text || `Ошибка ${res.status}`
+    });
   }
 
-  const text = await res.text();
+  const data = await res.json();
 
   if (res.ok) {
-    return text as T;
+    return data;
   }
 
-  return Promise.reject({
-    message: text || `Ошибка ${res.status}`
-  });
+  return Promise.reject(data);
 };
 
 type TServerResponse<T> = {
@@ -48,7 +52,9 @@ export const refreshToken = (): Promise<TRefreshResponse> =>
   })
     .then((res) => checkResponse<TRefreshResponse>(res))
     .then((refreshData) => {
-      if (!refreshData.success) return Promise.reject(refreshData);
+      if (!refreshData.success) {
+        return Promise.reject(refreshData);
+      }
 
       localStorage.setItem('refreshToken', refreshData.refreshToken);
       setCookie('accessToken', refreshData.accessToken);
@@ -88,10 +94,6 @@ type TFeedsResponse = TServerResponse<{
   orders: TOrder[];
   total: number;
   totalToday: number;
-}>;
-
-type TOrdersResponse = TServerResponse<{
-  data: TOrder[];
 }>;
 
 export const getIngredientsApi = () =>

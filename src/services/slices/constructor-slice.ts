@@ -1,8 +1,4 @@
-import {
-  PayloadAction,
-  createAsyncThunk,
-  createSlice
-} from '@reduxjs/toolkit';
+import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import { orderBurgerApi } from '../../utils/burger-api';
 import { TConstructorIngredient, TIngredient, TOrder } from '../../utils/types';
@@ -58,7 +54,7 @@ const constructorSlice = createSlice({
           state.constructorItems.ingredients.push(action.payload);
         }
       },
-      
+
       prepare: (ingredient: TIngredient) => ({
         payload: {
           ...ingredient,

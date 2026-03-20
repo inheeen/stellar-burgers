@@ -14,7 +14,7 @@ const initialState: TOrderState = {
   error: null
 };
 
-export const fetchOrderByNumber = createAsyncThunk(
+export const fetchOrderByNumber = createAsyncThunk<TOrder | null, number>(
   'order/fetchOrderByNumber',
   async (number: number) => {
     const response = await getOrderByNumberApi(number);

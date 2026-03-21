@@ -3,12 +3,36 @@ import { useInView } from 'react-intersection-observer';
 
 import { TTabMode } from '@utils-types';
 import { BurgerIngredientsUI } from '../ui/burger-ingredients';
+import { useSelector } from '../../services/store';
+import {
+  selectIngredients,
+  selectConstructorBun,
+  selectConstructorIngredients
+} from '../../services/selectors';
 
 export const BurgerIngredients: FC = () => {
-  /** TODO: взять переменные из стора */
-  const buns = [];
-  const mains = [];
-  const sauces = [];
+  const ingredients = useSelector(selectIngredients);
+  const bun = useSelector(selectConstructorBun);
+  const constructorIngredients = useSelector(selectConstructorIngredients);
+
+  const buns = ingredients.filter((item) => item.type === 'bun');
+  const mains = ingredients.filter((item) => item.type === 'main');
+  const sauces = ingredients.filter((item) => item.type === 'sauce');
+
+  const ingredientsCounters = ingredients.reduce<Record<string, number>>(
+    (acc, ingredient) => {
+      if (ingredient.type === 'bun') {
+        acc[ingredient._id] = bun?._id === ingredient._id ? 2 : 0;
+      } else {
+        acc[ingredient._id] = constructorIngredients.filter(
+          (item) => item._id === ingredient._id
+        ).length;
+      }
+
+      return acc;
+    },
+    {}
+  );
 
   const [currentTab, setCurrentTab] = useState<TTabMode>('bun');
   const titleBunRef = useRef<HTMLHeadingElement>(null);
@@ -39,15 +63,19 @@ export const BurgerIngredients: FC = () => {
 
   const onTabClick = (tab: string) => {
     setCurrentTab(tab as TTabMode);
-    if (tab === 'bun')
-      titleBunRef.current?.scrollIntoView({ behavior: 'smooth' });
-    if (tab === 'main')
-      titleMainRef.current?.scrollIntoView({ behavior: 'smooth' });
-    if (tab === 'sauce')
-      titleSaucesRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
-  return null;
+    if (tab === 'bun') {
+      titleBunRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    if (tab === 'main') {
+      titleMainRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    if (tab === 'sauce') {
+      titleSaucesRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <BurgerIngredientsUI
@@ -55,6 +83,7 @@ export const BurgerIngredients: FC = () => {
       buns={buns}
       mains={mains}
       sauces={sauces}
+      ingredientsCounters={ingredientsCounters}
       titleBunRef={titleBunRef}
       titleMainRef={titleMainRef}
       titleSaucesRef={titleSaucesRef}

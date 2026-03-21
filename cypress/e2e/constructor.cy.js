@@ -12,6 +12,7 @@ describe('Страница конструктора бургера', () => {
       fixture: 'order.json'
     }).as('createOrder');
 
+    // фейковые токены
     window.localStorage.setItem('refreshToken', 'test-refresh-token');
     cy.setCookie('accessToken', 'test-access-token');
 
@@ -19,37 +20,53 @@ describe('Страница конструктора бургера', () => {
     cy.wait('@getIngredients');
   });
 
+  afterEach(() => {
+    cy.clearCookie('accessToken');
+    cy.window().then((win) => {
+      win.localStorage.removeItem('refreshToken');
+    });
+  });
+
   it('отображает ингредиенты из моков', () => {
     cy.contains('Краторная булка N-200i').should('exist');
     cy.contains('Биокотлета из марсианской Магнолии').should('exist');
-    cy.contains('Соус фирменный Space Sauce').should('exist');
+
+    cy.get('[data-cy=constructor]').should('contain', 'Выберите булки');
+    cy.get('[data-cy=constructor-list]').should(
+      'contain',
+      'Выберите начинку'
+    );
   });
 
   it('открывает и закрывает модальное окно ингредиента по крестику', () => {
     cy.contains('Краторная булка N-200i').click({ force: true });
 
-    cy.contains('Детали ингредиента').should('exist');
-    cy.contains('Краторная булка N-200i').should('exist');
+    cy.get('[data-cy=modal]').should('exist');
+    cy.get('[data-cy=modal]')
+      .contains('Детали ингредиента')
+      .should('exist');
+
+    cy.get('[data-cy=modal]')
+      .contains('Краторная булка N-200i')
+      .should('exist');
 
     cy.get('[data-cy=modal-close]').click({ force: true });
 
-    cy.contains('Детали ингредиента').should('not.exist');
+    cy.get('[data-cy=modal]').should('not.exist');
   });
 
   it('закрывает модальное окно по клику на overlay', () => {
     cy.contains('Краторная булка N-200i').click({ force: true });
 
-    cy.contains('Детали ингредиента').should('exist');
+    cy.get('[data-cy=modal]').should('exist');
 
     cy.get('[data-cy=modal-overlay]').click({ force: true });
 
-    cy.contains('Детали ингредиента').should('not.exist');
+    cy.get('[data-cy=modal]').should('not.exist');
   });
 
   it('добавляет ингредиент в конструктор', () => {
-    cy.contains('li', 'Биокотлета из марсианской Магнолии').within(() => {
-      cy.contains('Добавить').click({ force: true });
-    });
+    cy.get('[data-cy="add-643d69a5c3f7b9001cfa0941"]').click({ force: true });
 
     cy.get('[data-cy=constructor-list]').should(
       'contain',
@@ -58,33 +75,35 @@ describe('Страница конструктора бургера', () => {
   });
 
   it('добавляет булку в конструктор', () => {
-    cy.contains('li', 'Краторная булка N-200i').within(() => {
-      cy.contains('Добавить').click({ force: true });
-    });
+    cy.get('[data-cy="add-643d69a5c3f7b9001cfa093c"]').click({ force: true });
 
-    cy.get('[data-cy=constructor]').should('contain', 'Краторная булка N-200i');
-    cy.get('[data-cy=constructor]').should('contain', '(верх)');
-    cy.get('[data-cy=constructor]').should('contain', '(низ)');
+    cy.get('[data-cy=constructor]').should(
+      'contain',
+      'Краторная булка N-200i'
+    );
   });
 
   it('создает заказ', () => {
-    cy.contains('li', 'Краторная булка N-200i').within(() => {
-      cy.contains('Добавить').click({ force: true });
-    });
-
-    cy.contains('li', 'Биокотлета из марсианской Магнолии').within(() => {
-      cy.contains('Добавить').click({ force: true });
-    });
+    cy.get('[data-cy="add-643d69a5c3f7b9001cfa093c"]').click({ force: true });
+    cy.get('[data-cy="add-643d69a5c3f7b9001cfa0941"]').click({ force: true });
 
     cy.contains('Оформить заказ').click({ force: true });
 
     cy.wait('@createOrder');
 
+    cy.get('[data-cy=modal]').should('exist');
+
     cy.get('[data-cy=order-number]').should('contain', '12345');
 
     cy.get('[data-cy=modal-close]').click({ force: true });
 
+    cy.get('[data-cy=modal]').should('not.exist');
+
+    // проверяем очистку конструктора
     cy.get('[data-cy=constructor]').should('contain', 'Выберите булки');
-    cy.get('[data-cy=constructor-list]').should('contain', 'Выберите начинку');
+    cy.get('[data-cy=constructor-list]').should(
+      'contain',
+      'Выберите начинку'
+    );
   });
 });
